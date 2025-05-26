@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -23,9 +22,39 @@ const Checkout = () => {
     pincode: ''
   });
   const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [selectedUpiApp, setSelectedUpiApp] = useState('');
+
+  const upiApps = [
+    {
+      id: 'gpay',
+      name: 'Google Pay',
+      logo: 'https://images.unsplash.com/photo-1633265486064-086b219458ec?w=100&h=100&fit=crop&crop=center'
+    },
+    {
+      id: 'phonepe',
+      name: 'PhonePe',
+      logo: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center'
+    },
+    {
+      id: 'paytm',
+      name: 'Paytm',
+      logo: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=100&h=100&fit=crop&crop=center'
+    },
+    {
+      id: 'amazonpay',
+      name: 'Amazon Pay',
+      logo: 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=100&h=100&fit=crop&crop=center'
+    }
+  ];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleUpiAppSelect = (appId: string) => {
+    setSelectedUpiApp(appId);
+    const selectedApp = upiApps.find(app => app.id === appId);
+    toast.success(`${selectedApp?.name} selected for payment`);
   };
 
   const handleConfirmOrder = () => {
@@ -34,8 +63,13 @@ const Checkout = () => {
       return;
     }
 
+    if (paymentMethod === 'upi' && !selectedUpiApp) {
+      toast.error("Please select a UPI app for payment");
+      return;
+    }
+
     toast.success("Order Confirmed!");
-    navigate('/order-success', { state: { product, formData, paymentMethod } });
+    navigate('/order-success', { state: { product, formData, paymentMethod, selectedUpiApp } });
   };
 
   if (!product) {
@@ -180,6 +214,35 @@ const Checkout = () => {
                     <Label htmlFor="cod" className="text-white">Cash on Delivery</Label>
                   </div>
                 </RadioGroup>
+
+                {/* UPI Apps Selection */}
+                {paymentMethod === 'upi' && (
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-white font-medium">Select UPI App</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {upiApps.map((app) => (
+                        <Card 
+                          key={app.id}
+                          className={`cursor-pointer transition-all duration-200 border-2 ${
+                            selectedUpiApp === app.id 
+                              ? 'border-amber-500 bg-amber-500/10' 
+                              : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                          }`}
+                          onClick={() => handleUpiAppSelect(app.id)}
+                        >
+                          <CardContent className="p-3 flex items-center space-x-3">
+                            <img 
+                              src={app.logo} 
+                              alt={app.name}
+                              className="w-10 h-10 rounded-lg object-cover"
+                            />
+                            <span className="text-white font-medium text-sm">{app.name}</span>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Button 
