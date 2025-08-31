@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, ShoppingBag } from 'lucide-react';
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 
-const Checkout = () => {
-  const location = useLocation();
+const Checkout: React.FC = () => {
+  const { state } = useLocation();
   const navigate = useNavigate();
-  const product = location.state?.product;
+  const { product } = state || {};
 
   const [formData, setFormData] = useState({
     name: '',
@@ -19,242 +17,275 @@ const Checkout = () => {
     address: '',
     city: '',
     state: '',
-    pincode: ''
+    pincode: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState('upi');
-  const [selectedUpiApp, setSelectedUpiApp] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
-  const upiApps = [
-    {
-      id: 'gpay',
-      name: 'Google Pay',
-      logo: 'https://images.unsplash.com/photo-1633265486064-086b219458ec?w=100&h=100&fit=crop&crop=center'
-    },
-    {
-      id: 'phonepe',
-      name: 'PhonePe',
-      logo: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center'
-    },
-    {
-      id: 'paytm',
-      name: 'Paytm',
-      logo: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=100&h=100&fit=crop&crop=center'
-    },
-    {
-      id: 'amazonpay',
-      name: 'Amazon Pay',
-      logo: 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=100&h=100&fit=crop&crop=center'
-    }
-  ];
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUpiAppSelect = (appId: string) => {
-    setSelectedUpiApp(appId);
-    const selectedApp = upiApps.find(app => app.id === appId);
-    toast.success(`${selectedApp?.name} selected for payment`);
-  };
-
-  const handleConfirmOrder = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formData.name || !formData.phone || !formData.address || !formData.city || !formData.state || !formData.pincode) {
-      toast.error("Please fill in all delivery details");
+      toast.error("Please fill all fields");
       return;
     }
 
-    if (paymentMethod === 'upi' && !selectedUpiApp) {
-      toast.error("Please select a UPI app for payment");
-      return;
-    }
+    try {
+      const orderData = {
+        product: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          brandName: product.brandName,
+          selectedColor: product.selectedColor,
+          selectedSize: product.selectedSize,
+          category: product.category
+        },
+        userInfo: formData,
+        paymentMethod
+      };
 
-    toast.success("Order Confirmed!");
-    navigate('/order-success', { state: { product, formData, paymentMethod, selectedUpiApp } });
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
+      if (!response.ok) throw new Error(`Failed to create order: ${response.statusText}`);
+
+      const result = await response.json();
+      toast.success("Order placed successfully!");
+
+      // Notify AdminDashboard to update
+      window.localStorage.setItem("ordersUpdated", Date.now().toString());
+
+      navigate('/order-success', {
+        state: {
+          orderId: result.order.orderId,
+          product,
+          formData,
+          paymentMethod,
+        },
+      });
+    } catch (error: any) {
+      toast.error(`Failed to place order: ${error.message}`);
+    }
   };
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <p className="text-white">No product selected</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+      >
+        <p className="text-white text-xl font-semibold drop-shadow-md">No product selected.</p>
+      </motion.div>
     );
   }
 
+  const fallbackImage = "https://via.placeholder.com/300x200?text=No+Image";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <style>
+        {`
+          @keyframes gradientText {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .gradient-text {
+            background: linear-gradient(45deg, rgb(255, 193, 7), rgb(0, 184, 212), rgb(255, 87, 34), rgb(255, 193, 7));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientText 5s ease-in-out infinite;
+          }
+          .gradient-text-desc {
+            background: linear-gradient(45deg, rgb(255, 245, 157), rgb(128, 222, 234), rgb(255, 171, 145), rgb(255, 245, 157));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientText 7s ease-in-out infinite;
+          }
+        `}
+      </style>
+
       {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700">
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100 }}
+        className="bg-gradient-to-r from-amber-600 via-rose-600 to-blue-600 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50"
+      >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Button 
+          <motion.div
+            className="flex items-center space-x-4"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400 }}
+          >
+            <Button
               onClick={() => navigate(-1)}
-              variant="ghost" 
-              className="text-white hover:bg-slate-700"
+              variant="ghost"
+              className="text-white hover:bg-amber-500/20 hover:text-amber-300 transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <div className="flex items-center space-x-2">
-              <ShoppingBag className="h-8 w-8 text-amber-500" />
-              <h1 className="text-2xl font-bold text-white">Checkout</h1>
-            </div>
-          </div>
+            <motion.h1
+              className="text-2xl font-bold gradient-text"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              URBAN LUXURY
+            </motion.h1>
+          </motion.div>
         </div>
-      </header>
+      </motion.header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Order Summary */}
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex space-x-4">
-                <img 
-                  src={product.images[0]} 
-                  alt={product.name}
-                  className="w-20 h-20 object-cover rounded-lg"
-                />
-                <div className="flex-1">
-                  <h3 className="text-white font-semibold">{product.name}</h3>
-                  <p className="text-slate-300">{product.brandName}</p>
-                  <p className="text-slate-300">Color: {product.selectedColor}</p>
-                  <p className="text-slate-300">Size: {product.selectedSize}</p>
-                  <p className="text-amber-500 font-bold text-lg">{product.price}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Delivery Details */}
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Delivery Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-white">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-white">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="address" className="text-white">Address</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white"
-                  placeholder="Enter your complete address"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city" className="text-white">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="City"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state" className="text-white">State</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => handleInputChange('state', e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="State"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pincode" className="text-white">Pincode</Label>
-                  <Input
-                    id="pincode"
-                    value={formData.pincode}
-                    onChange={(e) => handleInputChange('pincode', e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Pincode"
-                  />
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div className="space-y-4 pt-4">
-                <Label className="text-white font-semibold">Payment Method</Label>
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="upi" id="upi" className="border-slate-600" />
-                    <Label htmlFor="upi" className="text-white">UPI Payment</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cod" id="cod" className="border-slate-600" />
-                    <Label htmlFor="cod" className="text-white">Cash on Delivery</Label>
-                  </div>
-                </RadioGroup>
-
-                {/* UPI Apps Selection */}
-                {paymentMethod === 'upi' && (
-                  <div className="space-y-3 pt-2">
-                    <Label className="text-white font-medium">Select UPI App</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {upiApps.map((app) => (
-                        <Card 
-                          key={app.id}
-                          className={`cursor-pointer transition-all duration-200 border-2 ${
-                            selectedUpiApp === app.id 
-                              ? 'border-amber-500 bg-amber-500/10' 
-                              : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
-                          }`}
-                          onClick={() => handleUpiAppSelect(app.id)}
-                        >
-                          <CardContent className="p-3 flex items-center space-x-3">
-                            <img 
-                              src={app.logo} 
-                              alt={app.name}
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
-                            <span className="text-white font-medium text-sm">{app.name}</span>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <Button 
-                onClick={handleConfirmOrder}
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-4 text-lg"
+      {/* Main */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="container mx-auto px-4 py-12"
+      >
+        <Card className="w-full max-w-2xl mx-auto bg-slate-800/90 border-amber-500/50 shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold gradient-text text-center">Checkout</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
               >
-                Confirm Order
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+                <h3 className="text-white font-semibold mb-4 drop-shadow-sm">Product Details</h3>
+                <div className="flex space-x-4">
+                  <img 
+                    src={product.image || fallbackImage} 
+                    alt={product.name} 
+                    className="w-24 h-24 object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = fallbackImage;
+                      console.warn(`Failed to load image for ${product.name}: ${product.image}`);
+                    }}
+                  />
+                  <div className="text-white">
+                    <h4 className="font-semibold drop-shadow-sm">{product.name}</h4>
+                    <p className="text-slate-200 drop-shadow-sm">{product.brandName}</p>
+                    <p className="text-slate-200 drop-shadow-sm">Color: {product.selectedColor}</p>
+                    <p className="text-slate-200 drop-shadow-sm">Size: {product.selectedSize}</p>
+                    <p className="text-amber-400 font-bold drop-shadow-sm">₹{product.price}</p>
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <h3 className="text-white font-semibold mb-4 drop-shadow-sm">Delivery Information</h3>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block mb-1 text-white drop-shadow-sm">Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white border-none focus:ring-amber-500 focus:ring-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-white drop-shadow-sm">Phone</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white border-none focus:ring-amber-500 focus:ring-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-white drop-shadow-sm">Address</label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white border-none focus:ring-amber-500 focus:ring-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-white drop-shadow-sm">City</label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white border-none focus:ring-amber-500 focus:ring-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-white drop-shadow-sm">State</label>
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white border-none focus:ring-amber-500 focus:ring-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-white drop-shadow-sm">Pincode</label>
+                    <input
+                      type="text"
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white border-none focus:ring-amber-500 focus:ring-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-white drop-shadow-sm">Payment Method</label>
+                    <select
+                      name="paymentMethod"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white border-none focus:ring-amber-500 focus:ring-2"
+                    >
+                      <option value="cod">Cash on Delivery</option>
+                      <option value="upi">UPI Payment</option>
+                    </select>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold py-3 rounded-full shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    Place Order
+                  </Button>
+                </form>
+              </motion.div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };

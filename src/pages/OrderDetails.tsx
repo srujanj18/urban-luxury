@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,9 +15,10 @@ const OrderDetails = () => {
     { step: 'Delivered', completed: false, icon: Package }
   ];
 
+  const fallbackImage = "https://via.placeholder.com/300x200?text=No+Image";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -37,14 +37,11 @@ const OrderDetails = () => {
           </div>
         </div>
       </header>
-
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Order Status */}
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Order Status - {orderId}</CardTitle>
+              <CardTitle className="text-white">Order Status - {orderId || 'N/A'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex justify-between items-center">
@@ -52,20 +49,14 @@ const OrderDetails = () => {
                   const Icon = status.icon;
                   return (
                     <div key={index} className="flex flex-col items-center">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
-                        status.completed 
-                          ? 'bg-amber-500 text-white' 
-                          : 'bg-slate-600 text-slate-400'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${status.completed ? 'bg-amber-500 text-white' : 'bg-slate-600 text-slate-400'}`}>
                         <Icon className="h-6 w-6" />
                       </div>
                       <span className={`text-sm ${status.completed ? 'text-white' : 'text-slate-400'}`}>
                         {status.step}
                       </span>
                       {index < orderStatus.length - 1 && (
-                        <div className={`w-full h-0.5 mt-2 ${
-                          status.completed ? 'bg-amber-500' : 'bg-slate-600'
-                        }`} />
+                        <div className={`w-full h-0.5 mt-2 ${status.completed ? 'bg-amber-500' : 'bg-slate-600'}`} />
                       )}
                     </div>
                   );
@@ -73,9 +64,7 @@ const OrderDetails = () => {
               </div>
             </CardContent>
           </Card>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Product Details */}
             {product && (
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
@@ -84,23 +73,25 @@ const OrderDetails = () => {
                 <CardContent>
                   <div className="flex space-x-4">
                     <img 
-                      src={product.images[0]} 
+                      src={product.image || fallbackImage} 
                       alt={product.name}
                       className="w-24 h-24 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.src = fallbackImage;
+                        console.warn(`Failed to load image for ${product.name}: ${product.image}`);
+                      }}
                     />
                     <div className="flex-1">
                       <h3 className="text-white font-semibold text-lg">{product.name}</h3>
                       <p className="text-slate-300">{product.brandName}</p>
                       <p className="text-slate-300">Color: {product.selectedColor}</p>
                       <p className="text-slate-300">Size: {product.selectedSize}</p>
-                      <p className="text-amber-500 font-bold text-xl mt-2">{product.price}</p>
+                      <p className="text-amber-500 font-bold text-xl mt-2">₹{product.price}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )}
-
-            {/* Delivery Information */}
             {formData && (
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
@@ -125,12 +116,10 @@ const OrderDetails = () => {
               </Card>
             )}
           </div>
-
-          {/* Action Button */}
           <div className="text-center">
             <Button 
               onClick={() => navigate('/dashboard')}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold px-8"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white"
             >
               Continue Shopping
             </Button>

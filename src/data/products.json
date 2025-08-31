@@ -1,0 +1,153 @@
+{
+  "1": [
+    {
+      "id": 1756269299698,
+      "name": "Test Product",
+      "price": 9999,
+      "image": "http://localhost:5000/uploads/1756269299682-test-image.txt",
+      "category": "Shirt",
+      "description": "This is a test product description",
+      "sizes": [
+        "M",
+        "L"
+      ],
+      "mrp": 12999
+    },
+    {
+      "id": 1756270557594,
+      "name": "white shirt",
+      "price": 900,
+      "image": "http://localhost:5000/uploads/1756270557590-shirt.jpeg",
+      "category": "Shirt",
+      "description": "dakndjdn",
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "mrp": 1000
+    },
+    {
+      "id": 1756277689783,
+      "name": "white shirt",
+      "price": 9999,
+      "image": "http://localhost:5001/uploads/1756277689751-shirt.jpeg",
+      "category": "Shirt",
+      "description": "jsdnjsndjns",
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "mrp": 10000
+    },
+    {
+      "id": 1756277813395,
+      "name": "white shirt",
+      "price": 9999,
+      "image": "http://localhost:5001/uploads/1756277813391-shirt.jpeg",
+      "category": "Shirt",
+      "description": "jsdnjsndjns",
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "mrp": 10000
+    },
+    {
+      "id": 1756277904457,
+      "name": "white shirt ",
+      "price": 9000,
+      "image": "http://localhost:5001/uploads/1756277904451-shirt.jpeg",
+      "category": "Shirt",
+      "description": "asasasas",
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "mrp": 10000
+    },
+    {
+      "id": 1756278025894,
+      "name": "blackadd",
+      "price": 2000,
+      "image": "http://localhost:5001/uploads/1756278025877-shirt.jpeg",
+      "category": "Shirt",
+      "description": "sssss",
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "mrp": 1000
+    }
+  ],
+  "nike": [
+    {
+      "id": 1,
+      "name": "Nike Air Max 90",
+      "price": 12000,
+      "image": "/images/Nike.png",
+      "category": "Shoes",
+      "description": "Classic Nike Air Max 90 sneakers",
+      "sizes": [
+        "8",
+        "9",
+        "10",
+        "11"
+      ],
+      "mrp": 15000
+    },
+    {
+      "id": 2,
+      "name": "Nike Dri-FIT T-Shirt",
+      "price": 2500,
+      "image": "/images/Nike.png",
+      "category": "Clothing",
+      "description": "Moisture-wicking performance t-shirt",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "mrp": 3000
+    }
+  ],
+  "adidas": [
+    {
+      "id": 3,
+      "name": "Adidas Ultraboost",
+      "price": 18000,
+      "image": "/images/addidas.png",
+      "category": "Shoes",
+      "description": "Premium running shoes with Boost technology",
+      "sizes": [
+        "8",
+        "9",
+        "10",
+        "11"
+      ],
+      "mrp": 22000
+    }
+  ],
+  "puma": [
+    {
+      "id": 4,
+      "name": "Puma RS-X",
+      "price": 9000,
+      "image": "/images/puma.png",
+      "category": "Shoes",
+      "description": "Retro-inspired sneakers with modern comfort",
+      "sizes": [
+        "8",
+        "9",
+        "10",
+        "11"
+      ],
+      "mrp": 12000
+    }
+  ]
+}

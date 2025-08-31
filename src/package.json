@@ -1,0 +1,14 @@
+{
+  "name": "firebase-js-app",
+  "version": "1.0.0",
+  "description": "A simple JavaScript application that initializes Firebase.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "firebase": "^9.0.0"
+  },
+  "author": "",
+  "license": "ISC"
+}
